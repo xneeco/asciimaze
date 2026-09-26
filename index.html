@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ASCII MAZE // 3D</title>
+<title>ASCII MAZE // 3D // V4</title>
 <style>
   html, body {
     margin: 0;
@@ -368,7 +368,26 @@
   const objects = WORLD.objects.map(o => ({ ...o }));
   const floorPalette = WORLD.theme.floorPalette;
   const wallPalette = WORLD.theme.wallPalette;
+  const objectPalette = "@#*+o";
   const theme = WORLD.theme;
+
+  // Runtime state. This must exist before the touch controls and renderer are initialized.
+  const state = {
+    x: startX,
+    y: startY,
+    yaw: 0.0,
+    pitch: 0.0,
+    keys: Object.create(null),
+    speed: 2.5,
+    fov: Math.PI / 3,
+    running: true,
+    won: false,
+    lastTime: performance.now(),
+    notice: "",
+    noticeUntil: 0,
+    t: 0,
+    seed: Math.floor(Math.random() * 1000000)
+  };
 
   // Browser-side safety check: every walkable cell, artifact and the exit must
   // belong to the same connected component as the player start.
@@ -404,6 +423,29 @@
     // The actual win condition is checked directly: start -> every artifact -> exit.
     check(exitX, exitY, "Exit");
     objects.forEach((o,i)=>check(o.x,o.y,`Artifact ${i+1}`));
+
+    // Every objective can be visited in sequence and then the exit reached.
+    const targets = [...objects, {x: exitX, y: exitY}];
+    let from = [sx, sy];
+    for (const target of targets) {
+      const tx = Math.floor(target.x), ty = Math.floor(target.y);
+      const tq = [[...from]];
+      const visited = new Set([`${from[0]},${from[1]}`]);
+      let reached = false;
+      while (tq.length) {
+        const [x,y] = tq.shift();
+        if (x === tx && y === ty) { reached = true; break; }
+        for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const nx=x+dx, ny=y+dy, key=`${nx},${ny}`;
+          if (nx>=0 && ny>=0 && nx<W && ny<H && MAP[ny][nx] !== "#" && !visited.has(key)) {
+            visited.add(key);
+            tq.push([nx,ny]);
+          }
+        }
+      }
+      if (!reached) throw new Error("Unwinnable objective route");
+      from = [tx,ty];
+    }
   }
   validateWorld();
 
