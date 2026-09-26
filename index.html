@@ -93,6 +93,212 @@
   .dim {
     color: #777;
   }
+
+
+  /* -------------------------------------------------------------------------
+     Mobile arcade controls
+     ------------------------------------------------------------------------- */
+  #mobileControls {
+    display: none;
+  }
+
+  @media (max-width: 800px), (pointer: coarse) {
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      touch-action: none;
+      cursor: default;
+      padding: 0;
+    }
+
+    #asciiWrap {
+      width: 100%;
+      height: 62vh;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex: 0 0 62vh;
+    }
+
+    #screen {
+      font-size: clamp(5px, 1.45vw, 11px);
+      line-height: 1;
+      max-width: 100%;
+    }
+
+    #minimap {
+      width: 128px;
+      height: auto;
+      right: 8px;
+      bottom: calc(38vh + 8px);
+      opacity: 0.92;
+    }
+
+    #mapLegend {
+      display: none;
+    }
+
+    #mobileControls {
+      display: flex;
+      width: 100%;
+      height: 38vh;
+      min-height: 170px;
+      box-sizing: border-box;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px max(12px, 4vw) 14px;
+      background: #030504;
+      border-top: 1px solid #10221c;
+      gap: 12px;
+      position: relative;
+      z-index: 10;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .mobileGroup {
+      flex: 1 1 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .mobileLabel {
+      position: absolute;
+      bottom: 5px;
+      font: 9px/1 "Courier New", monospace;
+      color: #28564a;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    #movePad {
+      width: min(46vw, 190px);
+      height: min(46vw, 190px);
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 5px;
+    }
+
+    .arcadeKey {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid #24483e;
+      background: #08110e;
+      color: #7be0bf;
+      font: 700 clamp(15px, 5vw, 25px)/1 "Courier New", monospace;
+      box-shadow: inset 0 0 0 1px #07100d, 0 3px 0 #020504;
+      border-radius: 4px;
+      padding: 0;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .arcadeKey:active,
+    .arcadeKey.active {
+      background: #123229;
+      color: #b2ffe6;
+      transform: translateY(2px);
+      box-shadow: inset 0 0 12px rgba(52, 255, 184, 0.12), 0 1px 0 #020504;
+    }
+
+    #keyW { grid-column: 2; grid-row: 1; }
+    #keyA { grid-column: 1; grid-row: 2; }
+    #keyS { grid-column: 2; grid-row: 2; }
+    #keyD { grid-column: 3; grid-row: 2; }
+
+    #lookPad {
+      width: min(46vw, 190px);
+      height: min(46vw, 190px);
+      border: 1px solid #24483e;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center, #0b1814 0 22%, #06100d 23% 58%, #030806 59% 100%);
+      box-shadow: inset 0 0 0 1px #07100d, inset 0 0 28px rgba(45, 180, 135, 0.07);
+      position: relative;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    #lookPad::before,
+    #lookPad::after {
+      content: "";
+      position: absolute;
+      background: #18342c;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    #lookPad::before {
+      width: 1px;
+      height: 78%;
+      left: 50%;
+      top: 11%;
+    }
+
+    #lookPad::after {
+      height: 1px;
+      width: 78%;
+      left: 11%;
+      top: 50%;
+    }
+
+    #lookStick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 31%;
+      height: 31%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid #4c9e85;
+      background: #0c211b;
+      box-shadow: 0 0 14px rgba(51, 255, 183, 0.12), inset 0 0 10px rgba(120, 255, 212, 0.08);
+      pointer-events: none;
+    }
+
+    #lookPad.active #lookStick {
+      background: #123b30;
+      border-color: #7be0bf;
+    }
+
+    #overlayBox {
+      max-width: 90vw;
+      box-sizing: border-box;
+    }
+  }
+
+  @media (max-width: 430px) {
+    #asciiWrap {
+      height: 58vh;
+      flex-basis: 58vh;
+    }
+    #mobileControls {
+      height: 42vh;
+      min-height: 180px;
+    }
+    #minimap {
+      bottom: calc(42vh + 8px);
+      width: 108px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -102,12 +308,33 @@
 <canvas id="minimap" aria-hidden="true"></canvas>
 <div id="mapLegend">FOG // EXPLORED AREA ONLY</div>
 
+
+<div id="mobileControls" aria-label="Mobile arcade controls">
+  <div class="mobileGroup">
+    <div id="movePad" aria-label="WASD movement pad">
+      <button class="arcadeKey" id="keyW" data-key="w" aria-label="Move forward">W</button>
+      <button class="arcadeKey" id="keyA" data-key="a" aria-label="Move left">A</button>
+      <button class="arcadeKey" id="keyS" data-key="s" aria-label="Move backward">S</button>
+      <button class="arcadeKey" id="keyD" data-key="d" aria-label="Move right">D</button>
+    </div>
+    <div class="mobileLabel" style="left: 20%;">MOVE</div>
+  </div>
+
+  <div class="mobileGroup">
+    <div id="lookPad" aria-label="Analog camera control">
+      <div id="lookStick"></div>
+    </div>
+    <div class="mobileLabel" style="right: 20%;">LOOK</div>
+  </div>
+</div>
+
 <div id="overlay">
   <div id="overlayBox">
     <div>+----------------------------------------------------------+</div>
     <div>|                    ASCII MAZE // 3D                    |</div>
+    <div id="themeLine" class="dim"></div>
     <div>|                                                          |</div>
-    <div>|  CLICK TO ENTER                                         |</div>
+    <div>|  CLICK / TAP TO ENTER                                  |</div>
     <div>|  WASD = MOVE    MOUSE = LOOK    ESC = RELEASE MOUSE    |</div>
     <div>|  FIND THE ARTIFACTS. THEN FIND THE EXIT.                |</div>
     <div>|                                                          |</div>
@@ -115,6 +342,7 @@
     <div>|                                                          |</div>
     <div>+----------------------------------------------------------+</div>
     <div class="dim">Tip: keep moving. The maze has more than one sightline.</div>
+    <div class="dim" id="themeHint"></div>
   </div>
 </div>
 
@@ -125,84 +353,53 @@
   // ---------------------------------------------------------------------------
   // Maze / world
   // ---------------------------------------------------------------------------
-  const MAP = [
-    "#########################",
-    "#P....#........#........#",
-    "#.##..#.######.#.######.#",
-    "#....##......#.#........#",
-    "#.#######..#.#.#########",
-    "#......#...#.#.#.......#",
-    "#.####.#.###.#.#.#####.#",
-    "#.#....#.....#...#...#.#",
-    "#.#.###########.#.#.#.#",
-    "#...#.........#..#.#...#",
-    "###.#.#######.####.###.#",
-    "#...#.#.....#......#...#",
-    "#.###.#.###.#########.#",
-    "#.....#...#.....#.....#",
-    "#.#######.#####.#.###.#",
-    "#.......#.....#.#...#.#",
-    "#.#####.#####.#.###.#.#",
-    "#.#...#.....#.#.....#.#",
-    "#.#.#.#####.#.#####.#.#",
-    "#...#.......#.......#X#",
-    "#########################"
-  ];
+  // Six deterministic, fully-connected mazes. One is selected at random on
+  // every page load. Each world has its own palette and visual "quirk".
+  const WORLD_LIBRARY = [{"name":"NEON RELAY","map":["#########################","#.........#.#.......#...#","###.#####...#.#.#####.#.#","#.....#...#...#.......#.#","#.###.#.###.###########.#","#.#...#...#...#...#.....#","#.###.###.###.###.#.###.#","#...#...#...#...#.#...#.#","#.#.#######.###...###...#","#.#.....#...#...#...#.#.#","#.#####.#.###.#.###.#.###","#...#...#.#.........#...#","#.#.#.###.###########.#.#","#...#...#.#.....#...#...#","#.#####.#.#.###.#.#.###.#","#...#.#.#...#...#.#...#.#","###.#.#.#####.###.###.#.#","#...#.#.....#...#...#.#.#","#.###.#####.###.###.#.#.#","#.........#.........#...#","#########################"],"start":[1.5,1.5],"exit":[21.5,15.5],"objects":[{"x":18.5,"y":13.5,"type":"artifact","glyph":"[]","label":"SIGNAL CORE","found":false},{"x":22.5,"y":19.5,"type":"artifact","glyph":"<>","label":"VOID SHARD","found":false},{"x":13.5,"y":17.5,"type":"artifact","glyph":"()","label":"ECHO ORB","found":false}],"theme":{"name":"NEON RELAY","wallLight":[35,110,96],"wallDark":[16,48,48],"floorLight":[20,110,92],"floorDark":[7,26,25],"ground":"#0f6f5c","hud":"#62e4c2","artifact":"#ff4c6d","artifactAlt":"#ff91a3","exitLocked":"#a04e75","exitOpen":"#8e9bff","miniWall":"#245e51","miniFloor":"#0a241e","feature":"scanlines","wallPalette":" .:-=+*#%@","floorPalette":" .`,:;~+=!*?ox%#@"}},{"name":"VIOLET VOID","map":["#########################","#.#.......#.............#","#.#####.#.###.#########.#","#...#...#...#.....#.....#","###.#.#####.#.###.#.###.#","#...#.#...#.#...#.....#.#","#.###.#.###.#####.###.#.#","#.....#...#.........#...#","#########.#######.#.#.#.#","#.........#...#.....#.#.#","#.#####.#.#.###.#######.#","#.#...#.#.#.#...#.....#.#","#.###.#.#.#.#.###.#.#.#.#","#.....#.#...#...#.#.#.#.#","###.###.#.#####.#.#.#.#.#","#.#.....#.#.....#.#...#.#","#.#.#.#####.##.##.#.#.#.#","#...#.#...#.#...#.#.#...#","#.###.#.#.#.#.#.###.###.#","#...#...#.....#.....#...#","#########################"],"start":[1.5,1.5],"exit":[13.5,9.5],"objects":[{"x":8.5,"y":5.5,"type":"artifact","glyph":"[]","label":"SIGNAL CORE","found":false},{"x":11.5,"y":12.5,"type":"artifact","glyph":"<>","label":"VOID SHARD","found":false},{"x":3.5,"y":9.5,"type":"artifact","glyph":"()","label":"ECHO ORB","found":false}],"theme":{"name":"VIOLET VOID","wallLight":[92,62,150],"wallDark":[35,23,62],"floorLight":[74,32,104],"floorDark":[18,8,30],"ground":"#713bb0","hud":"#c18cff","artifact":"#ff4edb","artifactAlt":"#ffc0f0","exitLocked":"#7e4d85","exitOpen":"#9aa7ff","miniWall":"#43296e","miniFloor":"#180d2a","feature":"void","wallPalette":" .-:=+*#%@","floorPalette":" .,:;~+=!*?ox%#@"}},{"name":"TOXIC CIRCUIT","map":["#########################","#.#...#.....#...........#","#.#.#.#.#.#.###########.#","#.#.#...#...#.......#...#","#.#.#####.###.#####.#.#.#","#...#.........#...#.#.#.#","#######.#.#####.#.#.#.#.#","#.......#...#...#.#...#.#","#####.#.###.#.#.#######.#","#.....#...#...#.#.....#.#","#.#######.#####.#.#.###.#","#.......#.....#.#.#.....#","#.#####.##.##.#.#.#######","#.#...#.#...#...#.......#","#.###.#.#.#.###########.#","#.........#...#.......#.#","##.##.##.####.#.###.#.#.#","#...#.#...#.#.#...#.#.#.#","#.###.#.#.#.#.###.#.###.#","#.......#...#.....#.....#","#########################"],"start":[1.5,1.5],"exit":[23.5,13.5],"objects":[{"x":23.5,"y":18.5,"type":"artifact","glyph":"[]","label":"SIGNAL CORE","found":false},{"x":18.5,"y":13.5,"type":"artifact","glyph":"<>","label":"VOID SHARD","found":false},{"x":21.5,"y":9.5,"type":"artifact","glyph":"()","label":"ECHO ORB","found":false}],"theme":{"name":"TOXIC CIRCUIT","wallLight":[110,145,34],"wallDark":[43,55,11],"floorLight":[96,120,26],"floorDark":[15,24,6],"ground":"#668d17","hud":"#c8ff55","artifact":"#ffb52e","artifactAlt":"#fff0a5","exitLocked":"#8b733d","exitOpen":"#74dfff","miniWall":"#536d1b","miniFloor":"#142007","feature":"jitter","wallPalette":" .:-=+*#%@","floorPalette":" .,:;~+=!*?ox%#@"}},{"name":"BLOOD SIGNAL","map":["#########################","#.#...........#.........#","#.#.###########.###.###.#","#.#.#.......#.......#...#","#.#.#.#####.#.###.#######","#.#...#...#...#...#.....#","#.###.#.#.#.#.#.###.###.#","#...#.#.#.#...#.....#...#","###.#.#.#####.#######.#.#","#...#...#...#.....#...#.#","#.#######.#.#.#####.###.#","#.........#.......#.#...#","#.###.###.#######.#.###.#","#.......#.#.......#...#.#","###.###.#.#.#########.###","#.#...#.#.#.#.......#...#","#.###.#.#.#.#.#.#.#.###.#","#...#...#...#.#...#...#.#","#.#######.#######.###.#.#","#.................#.....#","#########################"],"start":[1.5,1.5],"exit":[19.5,9.5],"objects":[{"x":22.5,"y":7.5,"type":"artifact","glyph":"[]","label":"SIGNAL CORE","found":false},{"x":9.5,"y":6.5,"type":"artifact","glyph":"<>","label":"VOID SHARD","found":false},{"x":20.5,"y":13.5,"type":"artifact","glyph":"()","label":"ECHO ORB","found":false}],"theme":{"name":"BLOOD SIGNAL","wallLight":[150,52,58],"wallDark":[60,18,23],"floorLight":[120,26,34],"floorDark":[28,5,9],"ground":"#8b1828","hud":"#ff7580","artifact":"#ffd24a","artifactAlt":"#fff5b5","exitLocked":"#994d56","exitOpen":"#ff9e63","miniWall":"#6a242c","miniFloor":"#22090d","feature":"pulse","wallPalette":" .:-=+*#%@","floorPalette":" .`,:;~+=!*?ox%#@"}},{"name":"ARCTIC STATIC","map":["#########################","#.........#.......#.....#","########..#.##.##.#.#.#.#","#.....#...#.#...#.#.#.#.#","#.#####.###.#.#.#.###.###","#.......#...#.#.#...#...#","#..######.#.#.#####.#.#.#","#...#.#.....#...#...#.#.#","###.#.#.###.###.#.#####.#","#...#.#...#.#...#.....#.#","#.###.###.#.#.#######.#.#","#.#.#.....#.#.........#.#","#.#.#.#####.#.###.#.###.#","#.#...#...#.#.#...#.....#","#.#####.#.#.#.#.#######.#","#.......#...#.#.....#...#","#############.###.#.#.###","#.....#.......#...#.#...#","#.###.#.#.#.###.#####.#.#","#...#...#.....#.........#","#########################"],"start":[1.5,1.5],"exit":[23.5,3.5],"objects":[{"x":21.5,"y":2.5,"type":"artifact","glyph":"[]","label":"SIGNAL CORE","found":false},{"x":2.5,"y":19.5,"type":"artifact","glyph":"<>","label":"VOID SHARD","found":false},{"x":23.5,"y":19.5,"type":"artifact","glyph":"()","label":"ECHO ORB","found":false}],"theme":{"name":"ARCTIC STATIC","wallLight":[56,124,175],"wallDark":[18,42,64],"floorLight":[26,94,140],"floorDark":[6,18,30],"ground":"#1d78b0","hud":"#85d8ff","artifact":"#ff79c8","artifactAlt":"#ffd4ee","exitLocked":"#516a8d","exitOpen":"#8fffd9","miniWall":"#244d6b","miniFloor":"#081a29","feature":"frost","wallPalette":" .:-=+*#%@","floorPalette":" .,:;~+=!*?ox%#@"}},{"name":"AMBER MACHINE","map":["#########################","#.#...................#.#","#.#######.#####.###.#.#.#","#...........#...#.......#","#######.#.###.###########","#...#...#.#...#...#.....#","#.#.#.###.#.###.#.#.###.#","#.#...#...#.#...#.#.#...#","#.###.#####.#.###.#.#.###","#.........#.#...#...#...#","###.#.###...###.#######.#","#.#...#...#.....#.#...#.#","#.#####.###.#####.#.#.#.#","#...#...#...#.....#.#...#","#.#.#.###.###.#####.###.#","#.#.#.#.......#.....#...#","#.#.#.#####.###.#####.###","#.#.#.........#...#...#.#","#.###########.###.#.#.#.#","#.................#.....#","#########################"],"start":[1.5,1.5],"exit":[23.5,17.5],"objects":[{"x":21.5,"y":18.5,"type":"artifact","glyph":"[]","label":"SIGNAL CORE","found":false},{"x":23.5,"y":11.5,"type":"artifact","glyph":"<>","label":"VOID SHARD","found":false},{"x":3.5,"y":17.5,"type":"artifact","glyph":"()","label":"ECHO ORB","found":false}],"theme":{"name":"AMBER MACHINE","wallLight":[170,116,42],"wallDark":[65,40,10],"floorLight":[135,78,18],"floorDark":[28,13,3],"ground":"#a55e12","hud":"#ffc764","artifact":"#59e6ff","artifactAlt":"#bff7ff","exitLocked":"#8d5d34","exitOpen":"#9ca8ff","miniWall":"#744b16","miniFloor":"#261204","feature":"amber","wallPalette":" .:-=+*#%@","floorPalette":" .`:,;~+=!*?ox%#@"}}];
 
-  const W = Math.max(...MAP.map(row => row.length));
-  // Normalize rows so the DDA raycaster always sees a rectangular maze.
-  for (let y = 0; y < MAP.length; y++) {
-    if (MAP[y].length < W) MAP[y] = MAP[y].padEnd(W, "#");
-  }
+  const WORLD = WORLD_LIBRARY[Math.floor(Math.random() * WORLD_LIBRARY.length)];
+  const MAP = WORLD.map;
   const H = MAP.length;
+  const W = MAP[0].length;
 
-  let startX = 1.5, startY = 1.5;
-  let exitX = W - 1.5, exitY = H - 2.5;
+  let startX = WORLD.start[0], startY = WORLD.start[1];
+  let exitX = WORLD.exit[0], exitY = WORLD.exit[1];
 
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      if (MAP[y][x] === "P") {
-        startX = x + 0.5;
-        startY = y + 0.5;
-      }
-      if (MAP[y][x] === "X") {
-        exitX = x + 0.5;
-        exitY = y + 0.5;
+  const objects = WORLD.objects.map(o => ({ ...o }));
+  const floorPalette = WORLD.theme.floorPalette;
+  const wallPalette = WORLD.theme.wallPalette;
+  const theme = WORLD.theme;
+
+  // Browser-side safety check: every walkable cell, artifact and the exit must
+  // belong to the same connected component as the player start.
+  function validateWorld() {
+    if (!MAP.length || MAP.some(row => row.length !== MAP[0].length)) {
+      throw new Error("Invalid maze dimensions");
+    }
+    const sx = Math.floor(startX), sy = Math.floor(startY);
+    const seen = new Set([`${sx},${sy}`]);
+    const q = [[sx, sy]];
+    while (q.length) {
+      const [x,y] = q.shift();
+      for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nx=x+dx, ny=y+dy, key=`${nx},${ny}`;
+        if (nx>=0 && ny>=0 && nx<W && ny<H && MAP[ny][nx] !== "#" && !seen.has(key)) {
+          seen.add(key);
+          q.push([nx,ny]);
+        }
       }
     }
+    const walkable = MAP.flat().filter(c => c !== "#").length;
+    if (seen.size !== walkable) throw new Error("Disconnected maze");
+    const check = (x,y,label) => {
+      const ix=Math.floor(x), iy=Math.floor(y);
+      if (MAP[iy]?.[ix] === "#") throw new Error(label+" is inside a wall");
+      if (!seen.has(`${ix},${iy}`)) throw new Error(label+" is unreachable");
+    };
+    check(exitX, exitY, "Exit");
+    objects.forEach((o,i)=>check(o.x,o.y,`Artifact ${i+1}`));
   }
-
-  // Decorative / collectible objects.
-  const objects = [
-    { x: 4.5,  y: 13.5, type: "artifact", glyph: "[]", label: "RED DATA CORE", found: false },
-    { x: 17.5, y: 7.5,  type: "artifact", glyph: "<>", label: "VOID SHARD", found: false },
-    { x: 19.5, y: 16.5, type: "artifact", glyph: "()", label: "ECHO ORB", found: false }
-  ];
-
-  const floorPalette = " .`,:;~+=!*?ox%#@";
-  const wallPalette  = " .:-=+*#%@";
-  const smokeChars = ".,'`^";
-  const objectPalette = "@#*+o";
-
-  const state = {
-    x: startX,
-    y: startY,
-    yaw: 0.0,
-    pitch: 0.0,
-    keys: Object.create(null),
-    speed: 2.5,
-    fov: Math.PI / 3.0,
-    running: true,
-    won: false,
-    lastTime: performance.now(),
-    notice: "",
-    noticeUntil: 0,
-    t: 0,
-    seed: 1337
-  };
-
-  // Face roughly east at start.
-  state.yaw = 0.0;
+  validateWorld();
 
   // ---------------------------------------------------------------------------
   // Fog-of-war minimap
@@ -273,7 +470,7 @@
     for (let y = 0; y < H; y++) {
       for (let x = 0; x < W; x++) {
         if (!explored[y][x]) continue;
-        minimapCtx.fillStyle = MAP[y][x] === "#" ? "#204a3e" : "#0a2119";
+        minimapCtx.fillStyle = MAP[y][x] === "#" ? theme.miniWall : theme.miniFloor;
         minimapCtx.fillRect(ox + x * scale, oy + y * scale, Math.ceil(scale), Math.ceil(scale));
       }
     }
@@ -282,14 +479,14 @@
     for (const o of objects) {
       const ix = Math.floor(o.x), iy = Math.floor(o.y);
       if (!explored[iy]?.[ix]) continue;
-      minimapCtx.fillStyle = o.found ? "#35ffae" : "#ff4565";
+      minimapCtx.fillStyle = o.found ? theme.hud : theme.artifact;
       minimapCtx.fillRect(ox + (o.x - 0.16) * scale, oy + (o.y - 0.16) * scale,
                           Math.max(2, scale * 0.32), Math.max(2, scale * 0.32));
     }
 
     const ex = Math.floor(exitX), ey = Math.floor(exitY);
     if (explored[ey]?.[ex]) {
-      minimapCtx.fillStyle = objects.every(o => o.found) ? "#8d98ff" : "#7b4561";
+      minimapCtx.fillStyle = objects.every(o => o.found) ? theme.exitOpen : theme.exitLocked;
       minimapCtx.fillRect(ox + (exitX - 0.2) * scale, oy + (exitY - 0.2) * scale,
                           Math.max(2, scale * 0.4), Math.max(2, scale * 0.4));
     }
@@ -308,7 +505,7 @@
     minimapCtx.fill();
     minimapCtx.restore();
 
-    minimapCtx.strokeStyle = "#10271f";
+    minimapCtx.strokeStyle = theme.miniWall;
     minimapCtx.strokeRect(0.5, 0.5, w - 1, h - 1);
   }
 
@@ -318,6 +515,10 @@
   const screen = document.getElementById("screen");
   const overlay = document.getElementById("overlay");
   const overlayBox = document.getElementById("overlayBox");
+  const themeLine = document.getElementById("themeLine");
+  const themeHint = document.getElementById("themeHint");
+  if (themeLine) themeLine.textContent = `// ${theme.name} //`;
+  if (themeHint) themeHint.textContent = `WORLD ${WORLD_LIBRARY.indexOf(WORLD)+1}/${WORLD_LIBRARY.length} // ${theme.feature.toUpperCase()}`;
 
   const pixel = document.createElement("canvas");
   const pctx = pixel.getContext("2d", { alpha: false });
@@ -341,6 +542,111 @@
     resize();
     resizeMinimap();
   });
+
+
+  // ---------------------------------------------------------------------------
+  // Mobile touch controls
+  // ---------------------------------------------------------------------------
+  const mobileControls = document.getElementById("mobileControls");
+  const moveButtons = [...document.querySelectorAll("#movePad [data-key]")];
+  const lookPad = document.getElementById("lookPad");
+  const lookStick = document.getElementById("lookStick");
+  const touchMode = window.matchMedia("(pointer: coarse)").matches ||
+                    "ontouchstart" in window;
+  let lookPointerId = null;
+  let lastLookX = 0;
+  let lastLookY = 0;
+
+  function setVirtualKey(key, down, button) {
+    state.keys[key] = down;
+    if (button) button.classList.toggle("active", down);
+  }
+
+  function releaseAllVirtualKeys() {
+    for (const button of moveButtons) {
+      setVirtualKey(button.dataset.key, false, button);
+    }
+  }
+
+  function onMovePointerDown(e) {
+    e.preventDefault();
+    const key = e.currentTarget.dataset.key;
+    setVirtualKey(key, true, e.currentTarget);
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+
+  function onMovePointerEnd(e) {
+    e.preventDefault();
+    setVirtualKey(e.currentTarget.dataset.key, false, e.currentTarget);
+  }
+
+  moveButtons.forEach(button => {
+    button.addEventListener("pointerdown", onMovePointerDown, { passive: false });
+    button.addEventListener("pointerup", onMovePointerEnd, { passive: false });
+    button.addEventListener("pointercancel", onMovePointerEnd, { passive: false });
+    button.addEventListener("lostpointercapture", onMovePointerEnd, { passive: false });
+  });
+
+  function updateLookStick(dx, dy) {
+    const radius = lookPad.clientWidth * 0.25;
+    const mag = Math.hypot(dx, dy);
+    const scale = mag > radius ? radius / mag : 1;
+    const sx = dx * scale;
+    const sy = dy * scale;
+    lookStick.style.left = `calc(50% + ${sx}px)`;
+    lookStick.style.top = `calc(50% + ${sy}px)`;
+  }
+
+  function resetLookStick() {
+    lookStick.style.left = "50%";
+    lookStick.style.top = "50%";
+    lookPad.classList.remove("active");
+    lookPointerId = null;
+  }
+
+  function onLookDown(e) {
+    if (state.won) return;
+    e.preventDefault();
+    lookPointerId = e.pointerId;
+    lastLookX = e.clientX;
+    lastLookY = e.clientY;
+    lookPad.classList.add("active");
+    try { lookPad.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+
+  function onLookMove(e) {
+    if (e.pointerId !== lookPointerId) return;
+    e.preventDefault();
+    const dx = e.clientX - lastLookX;
+    const dy = e.clientY - lastLookY;
+    lastLookX = e.clientX;
+    lastLookY = e.clientY;
+
+    // The analog pad behaves like a virtual thumbstick: while dragging,
+    // horizontal movement turns and vertical movement raises/lowers the view.
+    state.yaw += dx * 0.012;
+    state.pitch = clamp(state.pitch - dy * 0.008, -1.15, 1.15);
+
+    const rect = lookPad.getBoundingClientRect();
+    updateLookStick(e.clientX - (rect.left + rect.width / 2), e.clientY - (rect.top + rect.height / 2));
+  }
+
+  function onLookEnd(e) {
+    if (e.pointerId !== lookPointerId) return;
+    e.preventDefault();
+    resetLookStick();
+  }
+
+  lookPad.addEventListener("pointerdown", onLookDown, { passive: false });
+  lookPad.addEventListener("pointermove", onLookMove, { passive: false });
+  lookPad.addEventListener("pointerup", onLookEnd, { passive: false });
+  lookPad.addEventListener("pointercancel", onLookEnd, { passive: false });
+  lookPad.addEventListener("lostpointercapture", onLookEnd, { passive: false });
+
+  if (touchMode) {
+    document.addEventListener("contextmenu", e => e.preventDefault(), { passive: false });
+    document.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+  }
 
   function clamp(v, a, b) {
     return Math.max(a, Math.min(b, v));
@@ -467,7 +773,7 @@
         if (y < horizon) {
           const band = Math.floor((horizon - y) / 3);
           grid[y][x] = band < 2 && dither > 0.82 ? "." : " ";
-          colorGrid[y][x] = "#17261f";
+          colorGrid[y][x] = `rgb(${theme.floorDark[0]}, ${theme.floorDark[1]}, ${theme.floorDark[2]})`;
         } else {
           const dy = (y - horizon + 1) / Math.max(1, ROWS - horizon);
           const intensity = clamp(1 - dy * 0.95, 0, 1);
@@ -499,7 +805,9 @@
         if (y < 0 || y >= ROWS) continue;
         const rel = Math.abs((y - horizon) / Math.max(1, wallHeight * 0.5));
         const edge = clamp(1 - rel, 0, 1);
-        const shimmer = noise2(x, y, state.t * 2.0);
+        const featureSpeed = theme.feature === "pulse" ? 3.2 :
+                            theme.feature === "jitter" ? 2.7 : 2.0;
+        const shimmer = noise2(x, y, state.t * featureSpeed);
         let light = shadeBase * sideFactor * (0.72 + edge * 0.28);
         light += (shimmer - 0.5) * 0.09;
 
@@ -508,11 +816,16 @@
 
         // Fake texture: occasional scanline breaks.
         const texNoise = noise2(x * 1.7, y * 0.8, state.t * 0.9);
-        const ch = texNoise > 0.97 ? "+" : wallPalette[idx];
+        let ch = texNoise > 0.97 ? "+" : wallPalette[idx];
+        if (theme.feature === "frost" && texNoise > 0.985) ch = "^";
+        if (theme.feature === "void" && texNoise < 0.012) ch = ".";
+        if (theme.feature === "amber" && texNoise > 0.992) ch = "=";
         grid[y][x] = ch;
-        const r = Math.floor(35 + light * 80);
-        const g = Math.floor(82 + light * 120);
-        const b = Math.floor(73 + light * 95);
+        const wc = theme.wallLight, wd = theme.wallDark;
+        const mix = clamp(light * 0.82 + 0.08, 0, 1);
+        const r = Math.floor(wd[0] + (wc[0] - wd[0]) * mix);
+        const g = Math.floor(wd[1] + (wc[1] - wd[1]) * mix);
+        const b = Math.floor(wd[2] + (wc[2] - wd[2]) * mix);
         colorGrid[y][x] = `rgb(${r}, ${g}, ${b})`;
       }
     }
@@ -524,7 +837,7 @@
         const rel = (y - horizon) / Math.max(1, ROWS - horizon);
         if (rel > 0 && d < 9 + rel * 7 && noise2(x, y, state.t) > 0.7) {
           grid[y][x] = noise2(x, y, state.t * 0.5) > 0.5 ? "." : ":";
-          colorGrid[y][x] = "#16755a";
+          colorGrid[y][x] = theme.ground;
         }
       }
     }
@@ -557,7 +870,10 @@
       if (!visible) continue;
 
       const pulse = 0.5 + 0.5 * Math.sin(state.t * 4 + o.x * 2);
-      const glyph = o.found ? "+" : objectPalette[Math.floor(pulse * objectPalette.length) % objectPalette.length];
+      const glyph = o.found ? "+" :
+        (theme.feature === "void" ? ["@","*","+"][Math.floor(pulse * 3) % 3] :
+         theme.feature === "frost" ? ["o","O","0"][Math.floor(pulse * 3) % 3] :
+         objectPalette[Math.floor(pulse * objectPalette.length) % objectPalette.length]);
 
       const halfW = Math.max(1, Math.floor(size * 0.38));
       for (let yy = -size; yy <= size; yy++) {
@@ -572,13 +888,13 @@
           if (sx < 0 || sx >= COLS) continue;
           if (o.found) {
             grid[y][sx] = ".";
-            colorGrid[y][sx] = "#35ffae";
+            colorGrid[y][sx] = theme.hud;
           } else if (Math.abs(xx) === rowWidth || Math.abs(yy) === size) {
             grid[y][sx] = "#";
-            colorGrid[y][sx] = "#ff667e";
+            colorGrid[y][sx] = theme.artifactAlt;
           } else {
             grid[y][sx] = glyph;
-            colorGrid[y][sx] = pulse > 0.65 ? "#ff8293" : "#ff3157";
+            colorGrid[y][sx] = pulse > 0.65 ? theme.artifactAlt : theme.artifact;
           }
         }
       }
@@ -607,7 +923,7 @@
           const yy = cy + i;
           drawChar(grid, sx, yy, i % 2 === 0 ? "|" : ":");
           if (yy >= 0 && yy < ROWS && sx >= 0 && sx < COLS) {
-            colorGrid[yy][sx] = open ? "#8d98ff" : "#a95676";
+            colorGrid[yy][sx] = open ? theme.exitOpen : theme.exitLocked;
           }
         }
       }
@@ -616,7 +932,7 @@
           const xx = sx - Math.floor(pattern.length / 2) + i;
           drawChar(grid, xx, cy - eh, pattern[i]);
           if (xx >= 0 && xx < COLS && cy - eh >= 0 && cy - eh < ROWS) {
-            colorGrid[cy - eh][xx] = open ? "#aab2ff" : "#89506a";
+            colorGrid[cy - eh][xx] = open ? theme.exitOpen : theme.exitLocked;
           }
         }
       }
@@ -640,15 +956,15 @@
 
     // HUD.
     const foundCount = objects.filter(o => o.found).length;
-    const hud1 = `WASD MOVE | MOUSE LOOK | CORES ${foundCount}/${objects.length} | ${state.won ? "ESCAPED" : "FIND THE EXIT"}`;
+    const hud1 = `${theme.name} | WASD MOVE | MOUSE LOOK | CORES ${foundCount}/${objects.length} | ${state.won ? "ESCAPED" : "FIND THE EXIT"}`;
     const hud2 = `POS ${state.x.toFixed(1)},${state.y.toFixed(1)}  YAW ${((state.yaw * 180 / Math.PI + 360) % 360).toFixed(0)}  FPS ${fps.toFixed(0)}`;
     for (let i = 0; i < hud1.length && i < COLS - 2; i++) {
       drawChar(grid, i + 1, 0, hud1[i]);
-      colorGrid[0][i + 1] = state.won ? "#9aa7ff" : "#67d7b2";
+      colorGrid[0][i + 1] = state.won ? theme.exitOpen : theme.hud;
     }
     for (let i = 0; i < hud2.length && i < COLS - 2; i++) {
       drawChar(grid, i + 1, 1, hud2[i]);
-      colorGrid[1][i + 1] = "#72a7ff";
+      colorGrid[1][i + 1] = theme.exitOpen;
     }
 
     if (state.notice && performance.now() < state.noticeUntil) {
@@ -678,7 +994,7 @@
         const x0 = Math.floor((COLS - str.length) / 2);
         for (let i = 0; i < str.length; i++) {
           if (yy >= 0 && yy < ROWS && x0 + i >= 0 && x0 + i < COLS) {
-            colorGrid[yy][x0 + i] = yy === wy + 3 ? "#67d7b2" : "#9aa7ff";
+            colorGrid[yy][x0 + i] = yy === wy + 3 ? theme.hud : theme.exitOpen;
           }
         }
       }
@@ -740,6 +1056,9 @@
         state.notice = "EXIT OPEN";
         state.noticeUntil = Infinity;
         overlay.style.display = "none";
+        mobileControls.style.visibility = "hidden";
+        releaseAllVirtualKeys();
+        resetLookStick();
         try { document.exitPointerLock(); } catch (_) {}
       } else {
         state.notice = "THE EXIT IS LOCKED";
@@ -774,22 +1093,18 @@
     if (["w","a","s","d","shift"," "].includes(k)) e.preventDefault();
 
     if (k === "r" && state.won) {
-      state.x = startX;
-      state.y = startY;
-      state.yaw = 0;
-      state.pitch = 0;
-      state.won = false;
-      for (const o of objects) o.found = false;
-      for (let y = 0; y < H; y++) explored[y].fill(false);
-      state.notice = "";
-      markExploredArea();
-      overlay.style.display = "flex";
-      try { overlayBox.focus(); } catch (_) {}
+      location.reload();
     }
   });
 
   window.addEventListener("keyup", (e) => {
     state.keys[e.key.toLowerCase()] = false;
+  });
+
+  window.addEventListener("blur", () => {
+    for (const k of Object.keys(state.keys)) state.keys[k] = false;
+    releaseAllVirtualKeys();
+    resetLookStick();
   });
 
   document.addEventListener("mousemove", (e) => {
@@ -800,15 +1115,18 @@
   });
 
   async function enterGame() {
-    try {
-      await document.body.requestPointerLock();
-    } catch (_) {}
+    // Pointer Lock is useful on desktop; mobile uses the virtual controls.
+    if (!touchMode) {
+      try {
+        await document.body.requestPointerLock();
+      } catch (_) {}
+    }
     overlay.style.display = "none";
   }
 
   overlayBox.addEventListener("click", enterGame);
   document.addEventListener("pointerlockchange", () => {
-    if (document.pointerLockElement !== document.body && !state.won) {
+    if (!touchMode && document.pointerLockElement !== document.body && !state.won) {
       overlay.style.display = "flex";
     }
   });
