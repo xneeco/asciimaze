@@ -389,13 +389,19 @@
         }
       }
     }
-    const walkable = MAP.flat().filter(c => c !== "#").length;
+    // Strings are rows, so MAP.flat() does NOT flatten their characters.
+    // Count walkable cells explicitly to avoid falsely rejecting valid maps.
+    const walkable = MAP.reduce((sum, row) =>
+      sum + [...row].filter(c => c !== "#").length, 0);
     if (seen.size !== walkable) throw new Error("Disconnected maze");
+
     const check = (x,y,label) => {
       const ix=Math.floor(x), iy=Math.floor(y);
       if (MAP[iy]?.[ix] === "#") throw new Error(label+" is inside a wall");
       if (!seen.has(`${ix},${iy}`)) throw new Error(label+" is unreachable");
     };
+
+    // The actual win condition is checked directly: start -> every artifact -> exit.
     check(exitX, exitY, "Exit");
     objects.forEach((o,i)=>check(o.x,o.y,`Artifact ${i+1}`));
   }
