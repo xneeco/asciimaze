@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASCII MAZE // 3D</title>
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    color: #ddd;
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: crosshair;
+  }
+
+  #screen {
+    margin: 0;
+    padding: 0;
+    white-space: pre;
+    line-height: 1;
+    font-size: clamp(8px, 1.15vw, 16px);
+    font-weight: 700;
+    user-select: none;
+    text-shadow: 0 0 2px currentColor;
+    letter-spacing: 0;
+  }
+
+  #asciiWrap {
+    position: relative;
+    display: inline-block;
+  }
+
+  #minimap {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: min(28vw, 330px);
+    aspect-ratio: 25 / 21;
+    background: #000;
+    border: 1px solid #1b1b1b;
+    box-shadow: 0 0 0 1px #050505, 0 0 20px rgba(0, 255, 180, 0.08);
+    image-rendering: pixelated;
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  #mapLegend {
+    position: fixed;
+    right: 22px;
+    bottom: calc(18px + min(23.52vw, 277px) + 6px);
+    color: #333;
+    font: 10px/1.1 "Courier New", Courier, monospace;
+    letter-spacing: 0.5px;
+    z-index: 4;
+    pointer-events: none;
+    text-align: right;
+  }
+
+  #overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+    color: #fff;
+    text-shadow: 0 0 6px #fff;
+  }
+
+  #overlayBox {
+    background: #000;
+    border: 1px solid #777;
+    padding: 18px 24px;
+    max-width: 680px;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  #overlayBox.hidden {
+    display: none;
+  }
+
+  .dim {
+    color: #777;
+  }
+
+
+  /* -------------------------------------------------------------------------
+     Mobile arcade controls
+     ------------------------------------------------------------------------- */
+  #mobileControls {
+    display: none;
+  }
+
+  @media (max-width: 800px), (pointer: coarse) {
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      touch-action: none;
+      cursor: default;
+      padding: 0;
+    }
+
+    #asciiWrap {
+      width: 100%;
+      height: 62vh;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex: 0 0 62vh;
+    }
+
+    #screen {
+      font-size: clamp(5px, 1.45vw, 11px);
+      line-height: 1;
+      max-width: 100%;
+    }
+
+    #minimap {
+      width: 128px;
+      height: auto;
+      right: 8px;
+      bottom: calc(38vh + 8px);
+      opacity: 0.92;
+    }
+
+    #mapLegend {
+      display: none;
+    }
+
+    #mobileControls {
+      display: flex;
+      width: 100%;
+      height: 38vh;
+      min-height: 170px;
+      box-sizing: border-box;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px max(12px, 4vw) 14px;
+      background: #030504;
+      border-top: 1px solid #10221c;
+      gap: 12px;
+      position: relative;
+      z-index: 10;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .mobileGroup {
+      flex: 1 1 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .mobileLabel {
+      position: absolute;
+      bottom: 5px;
+      font: 9px/1 "Courier New", monospace;
+      color: #28564a;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    #movePad {
+      width: min(46vw, 190px);
+      height: min(46vw, 190px);
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 5px;
+    }
+
+    .arcadeKey {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid #24483e;
+      background: #08110e;
+      color: #7be0bf;
+      font: 700 clamp(15px, 5vw, 25px)/1 "Courier New", monospace;
+      box-shadow: inset 0 0 0 1px #07100d, 0 3px 0 #020504;
+      border-radius: 4px;
+      padding: 0;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .arcadeKey:active,
+    .arcadeKey.active {
+      background: #123229;
+      color: #b2ffe6;
+      transform: translateY(2px);
+      box-shadow: inset 0 0 12px rgba(52, 255, 184, 0.12), 0 1px 0 #020504;
+    }
+
+    #keyW { grid-column: 2; grid-row: 1; }
+    #keyA { grid-column: 1; grid-row: 2; }
+    #keyS { grid-column: 2; grid-row: 2; }
+    #keyD { grid-column: 3; grid-row: 2; }
+
+    #lookPad {
+      width: min(46vw, 190px);
+      height: min(46vw, 190px);
+      border: 1px solid #24483e;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center, #0b1814 0 22%, #06100d 23% 58%, #030806 59% 100%);
+      box-shadow: inset 0 0 0 1px #07100d, inset 0 0 28px rgba(45, 180, 135, 0.07);
+      position: relative;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    #lookPad::before,
+    #lookPad::after {
+      content: "";
+      position: absolute;
+      background: #18342c;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    #lookPad::before {
+      width: 1px;
+      height: 78%;
+      left: 50%;
+      top: 11%;
+    }
+
+    #lookPad::after {
+      height: 1px;
+      width: 78%;
+      left: 11%;
+      top: 50%;
+    }
+
+    #lookStick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 31%;
+      height: 31%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid #4c9e85;
+      background: #0c211b;
+      box-shadow: 0 0 14px rgba(51, 255, 183, 0.12), inset 0 0 10px rgba(120, 255, 212, 0.08);
+      pointer-events: none;
+    }
+
+    #lookPad.active #lookStick {
+      background: #123b30;
+      border-color: #7be0bf;
+    }
+
+    #overlayBox {
+      max-width: 90vw;
+      box-sizing: border-box;
+    }
+  }
+
+  @media (max-width: 430px) {
+    #asciiWrap {
+      height: 58vh;
+      flex-basis: 58vh;
+    }
+    #mobileControls {
+      height: 42vh;
+      min-height: 180px;
+    }
+    #minimap {
+      bottom: calc(42vh + 8px);
+      width: 108px;
+    }
+  }
+
+</style>
+</head>
+<body>
+<div id="asciiWrap">
+  <pre id="screen"></pre>
+</div>
+<canvas id="minimap" aria-hidden="true"></canvas>
+<div id="mapLegend">FOG // EXPLORED AREA ONLY</div>
+
+
+<div id="mobileControls" aria-label="Mobile arcade controls">
+  <div class="mobileGroup">
+    <div id="movePad" aria-label="WASD movement pad">
+      <button class="arcadeKey" id="keyW" data-key="w" aria-label="Move forward">W</button>
+      <button class="arcadeKey" id="keyA" data-key="a" aria-label="Move left">A</button>
+      <button class="arcadeKey" id="keyS" data-key="s" aria-label="Move backward">S</button>
+      <button class="arcadeKey" id="keyD" data-key="d" aria-label="Move right">D</button>
+    </div>
+    <div class="mobileLabel" style="left: 20%;">MOVE</div>
+  </div>
+
+  <div class="mobileGroup">
+    <div id="lookPad" aria-label="Analog camera control">
+      <div id="lookStick"></div>
+    </div>
+    <div class="mobileLabel" style="right: 20%;">LOOK</div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div id="overlayBox">
+    <div>+----------------------------------------------------------+</div>
+    <div>|                    ASCII MAZE // 3D                    |</div>
+    <div>|                                                          |</div>
+    <div>|  CLICK TO ENTER                                         |</div>
+    <div>|  WASD = MOVE    MOUSE = LOOK    ESC = RELEASE MOUSE    |</div>
+    <div>|  FIND THE ARTIFACTS. THEN FIND THE EXIT.                |</div>
+    <div>|                                                          |</div>
+    <div>|  Everything you see is rendered as ASCII characters.    |</div>
+    <div>|                                                          |</div>
+    <div>+----------------------------------------------------------+</div>
+    <div class="dim">Tip: keep moving. The maze has more than one sightline.</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------------------------------------------------------------------------
+  // Maze / world
+  // ---------------------------------------------------------------------------
+  const MAP = [
+    "#########################",
+    "#P....#........#........#",
+    "#.##..#.######.#.######.#",
+    "#....##......#.#........#",
+    "#.#######..#.#.#########",
+    "#......#...#.#.#.......#",
+    "#.####.#.###.#.#.#####.#",
+    "#.#....#.....#...#...#.#",
+    "#.#.###########.#.#.#.#",
+    "#...#.........#..#.#...#",
+    "###.#.#######.####.###.#",
+    "#...#.#.....#......#...#",
+    "#.###.#.###.#########.#",
+    "#.....#...#.....#.....#",
+    "#.#######.#####.#.###.#",
+    "#.......#.....#.#...#.#",
+    "#.#####.#####.#.###.#.#",
+    "#.#...#.....#.#.....#.#",
+    "#.#.#.#####.#.#####.#.#",
+    "#...#.......#.......#X#",
+    "#########################"
+  ];
+
+  const W = Math.max(...MAP.map(row => row.length));
+  // Normalize rows so the DDA raycaster always sees a rectangular maze.
+  for (let y = 0; y < MAP.length; y++) {
+    if (MAP[y].length < W) MAP[y] = MAP[y].padEnd(W, "#");
+  }
+  const H = MAP.length;
+
+  let startX = 1.5, startY = 1.5;
+  let exitX = W - 1.5, exitY = H - 2.5;
+
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (MAP[y][x] === "P") {
+        startX = x + 0.5;
+        startY = y + 0.5;
+      }
+      if (MAP[y][x] === "X") {
+        exitX = x + 0.5;
+        exitY = y + 0.5;
+      }
+    }
+  }
+
+  // Decorative / collectible objects.
+  const objects = [
+    { x: 4.5,  y: 13.5, type: "artifact", glyph: "[]", label: "RED DATA CORE", found: false },
+    { x: 17.5, y: 7.5,  type: "artifact", glyph: "<>", label: "VOID SHARD", found: false },
+    { x: 19.5, y: 16.5, type: "artifact", glyph: "()", label: "ECHO ORB", found: false }
+  ];
+
+  const floorPalette = " .`,:;~+=!*?ox%#@";
+  const wallPalette  = " .:-=+*#%@";
+  const smokeChars = ".,'`^";
+  const objectPalette = "@#*+o";
+
+  const state = {
+    x: startX,
+    y: startY,
+    yaw: 0.0,
+    pitch: 0.0,
+    keys: Object.create(null),
+    speed: 2.5,
+    fov: Math.PI / 3.0,
+    running: true,
+    won: false,
+    lastTime: performance.now(),
+    notice: "",
+    noticeUntil: 0,
+    t: 0,
+    seed: 1337
+  };
+
+  // Face roughly east at start.
+  state.yaw = 0.0;
+
+  // ---------------------------------------------------------------------------
+  // Fog-of-war minimap
+  // ---------------------------------------------------------------------------
+  const explored = Array.from({ length: H }, () => Array(W).fill(false));
+  const minimapCanvas = document.getElementById("minimap");
+  const minimapCtx = minimapCanvas.getContext("2d");
+  let minimapReady = false;
+
+  function markExploredCircle(cx, cy, radius = 2.45) {
+    const minX = Math.max(0, Math.floor(cx - radius - 1));
+    const maxX = Math.min(W - 1, Math.ceil(cx + radius + 1));
+    const minY = Math.max(0, Math.floor(cy - radius - 1));
+    const maxY = Math.min(H - 1, Math.ceil(cy + radius + 1));
+
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        if (Math.hypot((x + 0.5) - cx, (y + 0.5) - cy) <= radius) {
+          explored[y][x] = true;
+        }
+      }
+    }
+  }
+
+  function markExploredRay(angle, length = 11) {
+    const step = 0.18;
+    for (let d = 0; d <= length; d += step) {
+      const x = state.x + Math.cos(angle) * d;
+      const y = state.y + Math.sin(angle) * d;
+      const ix = Math.floor(x), iy = Math.floor(y);
+      if (ix < 0 || iy < 0 || ix >= W || iy >= H) break;
+      explored[iy][ix] = true;
+      if (solid(x, y)) break;
+    }
+  }
+
+  function markExploredArea() {
+    markExploredCircle(state.x, state.y);
+    const half = state.fov * 0.5;
+    const count = 25;
+    for (let i = 0; i < count; i++) {
+      const angle = state.yaw - half + (i / (count - 1)) * state.fov;
+      markExploredRay(angle);
+    }
+  }
+
+  function resizeMinimap() {
+    const rect = minimapCanvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    minimapCanvas.width = Math.floor(rect.width * dpr);
+    minimapCanvas.height = Math.floor(rect.height * dpr);
+    minimapCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    minimapReady = true;
+  }
+
+  function renderMinimap() {
+    if (!minimapReady) resizeMinimap();
+    const w = minimapCanvas.clientWidth;
+    const h = minimapCanvas.clientHeight;
+    minimapCtx.fillStyle = "#000";
+    minimapCtx.fillRect(0, 0, w, h);
+
+    const scale = Math.min(w / W, h / H);
+    const ox = (w - W * scale) * 0.5;
+    const oy = (h - H * scale) * 0.5;
+
+    // Revealed maze only. Unexplored cells remain pure black.
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (!explored[y][x]) continue;
+        minimapCtx.fillStyle = MAP[y][x] === "#" ? "#204a3e" : "#0a2119";
+        minimapCtx.fillRect(ox + x * scale, oy + y * scale, Math.ceil(scale), Math.ceil(scale));
+      }
+    }
+
+    // Discovered collectibles and exit.
+    for (const o of objects) {
+      const ix = Math.floor(o.x), iy = Math.floor(o.y);
+      if (!explored[iy]?.[ix]) continue;
+      minimapCtx.fillStyle = o.found ? "#35ffae" : "#ff4565";
+      minimapCtx.fillRect(ox + (o.x - 0.16) * scale, oy + (o.y - 0.16) * scale,
+                          Math.max(2, scale * 0.32), Math.max(2, scale * 0.32));
+    }
+
+    const ex = Math.floor(exitX), ey = Math.floor(exitY);
+    if (explored[ey]?.[ex]) {
+      minimapCtx.fillStyle = objects.every(o => o.found) ? "#8d98ff" : "#7b4561";
+      minimapCtx.fillRect(ox + (exitX - 0.2) * scale, oy + (exitY - 0.2) * scale,
+                          Math.max(2, scale * 0.4), Math.max(2, scale * 0.4));
+    }
+
+    // Player arrow and a small facing cone.
+    minimapCtx.save();
+    minimapCtx.translate(ox + state.x * scale, oy + state.y * scale);
+    minimapCtx.rotate(state.yaw);
+    minimapCtx.fillStyle = "#fff";
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(scale * 0.48, 0);
+    minimapCtx.lineTo(-scale * 0.28, -scale * 0.28);
+    minimapCtx.lineTo(-scale * 0.14, 0);
+    minimapCtx.lineTo(-scale * 0.28, scale * 0.28);
+    minimapCtx.closePath();
+    minimapCtx.fill();
+    minimapCtx.restore();
+
+    minimapCtx.strokeStyle = "#10271f";
+    minimapCtx.strokeRect(0.5, 0.5, w - 1, h - 1);
+  }
+
+  // ---------------------------------------------------------------------------
+  // ASCII renderer
+  // ---------------------------------------------------------------------------
+  const screen = document.getElementById("screen");
+  const overlay = document.getElementById("overlay");
+  const overlayBox = document.getElementById("overlayBox");
+
+  const pixel = document.createElement("canvas");
+  const pctx = pixel.getContext("2d", { alpha: false });
+
+  let COLS = 110;
+  let ROWS = 44;
+  let charW = 8;
+  let charH = 14;
+  let rays = new Float32Array(COLS);
+
+  function resize() {
+    const targetW = Math.max(80, Math.min(140, Math.floor(window.innerWidth / 8.2)));
+    const targetH = Math.max(34, Math.min(58, Math.floor(window.innerHeight / 14)));
+    COLS = targetW;
+    ROWS = targetH;
+    rays = new Float32Array(COLS);
+  }
+
+  resize();
+  window.addEventListener("resize", () => {
+    resize();
+    resizeMinimap();
+  });
+
+
+  // ---------------------------------------------------------------------------
+  // Mobile touch controls
+  // ---------------------------------------------------------------------------
+  const mobileControls = document.getElementById("mobileControls");
+  const moveButtons = [...document.querySelectorAll("#movePad [data-key]")];
+  const lookPad = document.getElementById("lookPad");
+  const lookStick = document.getElementById("lookStick");
+  const touchMode = window.matchMedia("(pointer: coarse)").matches ||
+                    "ontouchstart" in window;
+  let lookPointerId = null;
+  let lastLookX = 0;
+  let lastLookY = 0;
+
+  function setVirtualKey(key, down, button) {
+    state.keys[key] = down;
+    if (button) button.classList.toggle("active", down);
+  }
+
+  function releaseAllVirtualKeys() {
+    for (const button of moveButtons) {
+      setVirtualKey(button.dataset.key, false, button);
+    }
+  }
+
+  function onMovePointerDown(e) {
+    e.preventDefault();
+    const key = e.currentTarget.dataset.key;
+    setVirtualKey(key, true, e.currentTarget);
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+
+  function onMovePointerEnd(e) {
+    e.preventDefault();
+    setVirtualKey(e.currentTarget.dataset.key, false, e.currentTarget);
+  }
+
+  moveButtons.forEach(button => {
+    button.addEventListener("pointerdown", onMovePointerDown, { passive: false });
+    button.addEventListener("pointerup", onMovePointerEnd, { passive: false });
+    button.addEventListener("pointercancel", onMovePointerEnd, { passive: false });
+    button.addEventListener("lostpointercapture", onMovePointerEnd, { passive: false });
+  });
+
+  function updateLookStick(dx, dy) {
+    const radius = lookPad.clientWidth * 0.25;
+    const mag = Math.hypot(dx, dy);
+    const scale = mag > radius ? radius / mag : 1;
+    const sx = dx * scale;
+    const sy = dy * scale;
+    lookStick.style.left = `calc(50% + ${sx}px)`;
+    lookStick.style.top = `calc(50% + ${sy}px)`;
+  }
+
+  function resetLookStick() {
+    lookStick.style.left = "50%";
+    lookStick.style.top = "50%";
+    lookPad.classList.remove("active");
+    lookPointerId = null;
+  }
+
+  function onLookDown(e) {
+    if (state.won) return;
+    e.preventDefault();
+    lookPointerId = e.pointerId;
+    lastLookX = e.clientX;
+    lastLookY = e.clientY;
+    lookPad.classList.add("active");
+    try { lookPad.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+
+  function onLookMove(e) {
+    if (e.pointerId !== lookPointerId) return;
+    e.preventDefault();
+    const dx = e.clientX - lastLookX;
+    const dy = e.clientY - lastLookY;
+    lastLookX = e.clientX;
+    lastLookY = e.clientY;
+
+    // The analog pad behaves like a virtual thumbstick: while dragging,
+    // horizontal movement turns and vertical movement raises/lowers the view.
+    state.yaw += dx * 0.012;
+    state.pitch = clamp(state.pitch - dy * 0.008, -1.15, 1.15);
+
+    const rect = lookPad.getBoundingClientRect();
+    updateLookStick(e.clientX - (rect.left + rect.width / 2), e.clientY - (rect.top + rect.height / 2));
+  }
+
+  function onLookEnd(e) {
+    if (e.pointerId !== lookPointerId) return;
+    e.preventDefault();
+    resetLookStick();
+  }
+
+  lookPad.addEventListener("pointerdown", onLookDown, { passive: false });
+  lookPad.addEventListener("pointermove", onLookMove, { passive: false });
+  lookPad.addEventListener("pointerup", onLookEnd, { passive: false });
+  lookPad.addEventListener("pointercancel", onLookEnd, { passive: false });
+  lookPad.addEventListener("lostpointercapture", onLookEnd, { passive: false });
+
+  if (touchMode) {
+    document.addEventListener("contextmenu", e => e.preventDefault(), { passive: false });
+    document.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+  }
+
+  function clamp(v, a, b) {
+    return Math.max(a, Math.min(b, v));
+  }
+
+  function cell(x, y) {
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+    if (ix < 0 || iy < 0 || ix >= W || iy >= H) return "#";
+    return MAP[iy][ix];
+  }
+
+  function solid(x, y) {
+    const c = cell(x, y);
+    return c === "#";
+  }
+
+  function canWalk(x, y) {
+    const r = 0.18;
+    return !solid(x-r, y-r) && !solid(x+r, y-r) &&
+           !solid(x-r, y+r) && !solid(x+r, y+r);
+  }
+
+  function noise2(x, y, t) {
+    // Fast deterministic pseudo-noise. Produces a little "video" shimmer.
+    const n = Math.sin(x * 12.9898 + y * 78.233 + t * 1.7 + state.seed) * 43758.5453;
+    return n - Math.floor(n);
+  }
+
+  function wrapAngle(a) {
+    const tau = Math.PI * 2;
+    a %= tau;
+    if (a > Math.PI) a -= tau;
+    if (a < -Math.PI) a += tau;
+    return a;
+  }
+
+  function raycast(angle) {
+    // DDA raycaster.
+    let rayDirX = Math.cos(angle);
+    let rayDirY = Math.sin(angle);
+
+    let mapX = Math.floor(state.x);
+    let mapY = Math.floor(state.y);
+
+    const deltaDistX = Math.abs(1 / (rayDirX || 1e-9));
+    const deltaDistY = Math.abs(1 / (rayDirY || 1e-9));
+
+    let stepX, stepY;
+    let sideDistX, sideDistY;
+
+    if (rayDirX < 0) {
+      stepX = -1;
+      sideDistX = (state.x - mapX) * deltaDistX;
+    } else {
+      stepX = 1;
+      sideDistX = (mapX + 1 - state.x) * deltaDistX;
+    }
+
+    if (rayDirY < 0) {
+      stepY = -1;
+      sideDistY = (state.y - mapY) * deltaDistY;
+    } else {
+      stepY = 1;
+      sideDistY = (mapY + 1 - state.y) * deltaDistY;
+    }
+
+    let side = 0;
+    let hit = false;
+    for (let i = 0; i < 80; i++) {
+      if (sideDistX < sideDistY) {
+        sideDistX += deltaDistX;
+        mapX += stepX;
+        side = 0;
+      } else {
+        sideDistY += deltaDistY;
+        mapY += stepY;
+        side = 1;
+      }
+
+      const c = (mapY >= 0 && mapY < H && mapX >= 0 && mapX < W)
+        ? MAP[mapY][mapX]
+        : "#";
+
+      if (c === "#") {
+        hit = true;
+        break;
+      }
+    }
+
+    let dist;
+    if (side === 0) {
+      dist = (mapX - state.x + (1 - stepX) / 2) / (rayDirX || 1e-9);
+    } else {
+      dist = (mapY - state.y + (1 - stepY) / 2) / (rayDirY || 1e-9);
+    }
+
+    dist = Math.max(0.05, Math.abs(dist));
+    return { dist, side, hit };
+  }
+
+  function drawChar(grid, x, y, ch) {
+    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return;
+    grid[y][x] = ch;
+  }
+
+  function textCentered(grid, y, str) {
+    const x = Math.floor((COLS - str.length) / 2);
+    for (let i = 0; i < str.length; i++) {
+      if (x + i >= 0 && x + i < COLS) grid[y][x + i] = str[i];
+    }
+  }
+
+  function render() {
+    const grid = Array.from({ length: ROWS }, () => new Array(COLS).fill(" "));
+    const colorGrid = Array.from({ length: ROWS }, () => new Array(COLS).fill("#cfcfcf"));
+    const depth = new Float32Array(COLS);
+    const horizon = Math.floor(ROWS * 0.48 + state.pitch * ROWS * 0.16);
+
+    // Ceiling / floor "signal".
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const dither = noise2(x, y, state.t * 0.65);
+        if (y < horizon) {
+          const band = Math.floor((horizon - y) / 3);
+          grid[y][x] = band < 2 && dither > 0.82 ? "." : " ";
+          colorGrid[y][x] = "#17261f";
+        } else {
+          const dy = (y - horizon + 1) / Math.max(1, ROWS - horizon);
+          const intensity = clamp(1 - dy * 0.95, 0, 1);
+          let idx = Math.floor(intensity * (floorPalette.length - 1));
+          idx += dither > 0.92 ? 1 : 0;
+          grid[y][x] = floorPalette[clamp(idx, 0, floorPalette.length - 1)];
+          const g = Math.floor(48 + intensity * 75);
+          colorGrid[y][x] = `rgb(8, ${g}, ${Math.max(42, Math.floor(g * 0.7))})`;
+        }
+      }
+    }
+
+    // Walls.
+    for (let x = 0; x < COLS; x++) {
+      const cameraX = 2 * x / COLS - 1;
+      const angle = state.yaw + cameraX * state.fov;
+      const hit = raycast(angle);
+      const corrected = hit.dist * Math.cos(angle - state.yaw);
+      rays[x] = corrected;
+
+      const wallHeight = Math.min(ROWS * 1.5, ROWS / corrected);
+      const top = Math.floor(horizon - wallHeight * 0.5);
+      const bottom = Math.ceil(horizon + wallHeight * 0.5);
+
+      const shadeBase = clamp(1 - corrected / 11, 0, 1);
+      const sideFactor = hit.side === 1 ? 0.78 : 1.0;
+
+      for (let y = top; y <= bottom; y++) {
+        if (y < 0 || y >= ROWS) continue;
+        const rel = Math.abs((y - horizon) / Math.max(1, wallHeight * 0.5));
+        const edge = clamp(1 - rel, 0, 1);
+        const shimmer = noise2(x, y, state.t * 2.0);
+        let light = shadeBase * sideFactor * (0.72 + edge * 0.28);
+        light += (shimmer - 0.5) * 0.09;
+
+        let idx = Math.floor(clamp(light, 0, 0.999) * wallPalette.length);
+        idx = clamp(idx, 0, wallPalette.length - 1);
+
+        // Fake texture: occasional scanline breaks.
+        const texNoise = noise2(x * 1.7, y * 0.8, state.t * 0.9);
+        const ch = texNoise > 0.97 ? "+" : wallPalette[idx];
+        grid[y][x] = ch;
+        const r = Math.floor(35 + light * 80);
+        const g = Math.floor(82 + light * 120);
+        const b = Math.floor(73 + light * 95);
+        colorGrid[y][x] = `rgb(${r}, ${g}, ${b})`;
+      }
+    }
+
+    // Ground perspective marks.
+    for (let x = 0; x < COLS; x += 2) {
+      const d = rays[x];
+      for (let y = horizon + 2; y < ROWS; y += 4) {
+        const rel = (y - horizon) / Math.max(1, ROWS - horizon);
+        if (rel > 0 && d < 9 + rel * 7 && noise2(x, y, state.t) > 0.7) {
+          grid[y][x] = noise2(x, y, state.t * 0.5) > 0.5 ? "." : ":";
+          colorGrid[y][x] = "#16755a";
+        }
+      }
+    }
+
+    // Sprites / objects.
+    const sprites = objects.map((o) => {
+      const dx = o.x - state.x;
+      const dy = o.y - state.y;
+      const dist = Math.hypot(dx, dy);
+      const ang = wrapAngle(Math.atan2(dy, dx) - state.yaw);
+      return { ...o, dist, ang };
+    }).filter(o => o.dist > 0.25 && Math.abs(o.ang) < state.fov * 0.72)
+      .sort((a, b) => b.dist - a.dist);
+
+    for (const o of sprites) {
+      const screenX = Math.floor(COLS / 2 + (o.ang / state.fov) * COLS);
+      const size = Math.max(2, Math.min(ROWS, Math.floor(ROWS / o.dist * 0.55)));
+      const centerY = horizon - Math.floor(state.pitch * ROWS * 0.12);
+
+      // Hide sprites behind walls.
+      const startX = Math.max(0, screenX - size);
+      const endX = Math.min(COLS - 1, screenX + size);
+      let visible = true;
+      for (let sx = startX; sx <= endX; sx++) {
+        if (rays[sx] < o.dist * 0.96) {
+          visible = false;
+          break;
+        }
+      }
+      if (!visible) continue;
+
+      const pulse = 0.5 + 0.5 * Math.sin(state.t * 4 + o.x * 2);
+      const glyph = o.found ? "+" : objectPalette[Math.floor(pulse * objectPalette.length) % objectPalette.length];
+
+      const halfW = Math.max(1, Math.floor(size * 0.38));
+      for (let yy = -size; yy <= size; yy++) {
+        const y = centerY + yy;
+        if (y < 0 || y >= ROWS) continue;
+
+        const nx = yy / Math.max(1, size);
+        const rowWidth = Math.floor(halfW * Math.sqrt(Math.max(0, 1 - nx * nx)));
+
+        for (let xx = -rowWidth; xx <= rowWidth; xx++) {
+          const sx = screenX + xx;
+          if (sx < 0 || sx >= COLS) continue;
+          if (o.found) {
+            grid[y][sx] = ".";
+            colorGrid[y][sx] = "#35ffae";
+          } else if (Math.abs(xx) === rowWidth || Math.abs(yy) === size) {
+            grid[y][sx] = "#";
+            colorGrid[y][sx] = "#ff667e";
+          } else {
+            grid[y][sx] = glyph;
+            colorGrid[y][sx] = pulse > 0.65 ? "#ff8293" : "#ff3157";
+          }
+        }
+      }
+
+      if (o.dist < 1.15 && !o.found) {
+        o._touchable = true;
+      } else {
+        o._touchable = false;
+      }
+    }
+
+    // Exit marker: subtle if far away, very visible nearby.
+    const ex = exitX, ey = exitY;
+    const edx = ex - state.x, edy = ey - state.y;
+    const ed = Math.hypot(edx, edy);
+    const ea = wrapAngle(Math.atan2(edy, edx) - state.yaw);
+
+    if (Math.abs(ea) < state.fov * 0.75 && ed > 0.3) {
+      const sx = Math.floor(COLS / 2 + (ea / state.fov) * COLS);
+      const eh = Math.max(2, Math.floor(ROWS / Math.max(1, ed) * 0.72));
+      const cy = horizon;
+      const open = objects.every(o => o.found);
+      const pattern = open ? "[EXIT]" : "[LOCK]";
+      if (ed < 8) {
+        for (let i = -Math.floor(eh * 0.45); i <= Math.floor(eh * 0.45); i++) {
+          const yy = cy + i;
+          drawChar(grid, sx, yy, i % 2 === 0 ? "|" : ":");
+          if (yy >= 0 && yy < ROWS && sx >= 0 && sx < COLS) {
+            colorGrid[yy][sx] = open ? "#8d98ff" : "#a95676";
+          }
+        }
+      }
+      if (ed < 7) {
+        for (let i = 0; i < pattern.length; i++) {
+          const xx = sx - Math.floor(pattern.length / 2) + i;
+          drawChar(grid, xx, cy - eh, pattern[i]);
+          if (xx >= 0 && xx < COLS && cy - eh >= 0 && cy - eh < ROWS) {
+            colorGrid[cy - eh][xx] = open ? "#aab2ff" : "#89506a";
+          }
+        }
+      }
+    }
+
+    // Crosshair.
+    const cx = Math.floor(COLS / 2);
+    const cy = Math.floor(ROWS / 2 + state.pitch * ROWS * 0.12);
+    drawChar(grid, cx, cy, "+");
+    drawChar(grid, cx - 1, cy, "-");
+    drawChar(grid, cx + 1, cy, "-");
+    drawChar(grid, cx, cy - 1, "|");
+    drawChar(grid, cx, cy + 1, "|");
+    if (cy >= 0 && cy < ROWS) {
+      if (cx >= 0 && cx < COLS) colorGrid[cy][cx] = "#ffffff";
+      if (cx - 1 >= 0) colorGrid[cy][cx - 1] = "#ffffff";
+      if (cx + 1 < COLS) colorGrid[cy][cx + 1] = "#ffffff";
+    }
+    if (cy - 1 >= 0) colorGrid[cy - 1][cx] = "#ffffff";
+    if (cy + 1 < ROWS) colorGrid[cy + 1][cx] = "#ffffff";
+
+    // HUD.
+    const foundCount = objects.filter(o => o.found).length;
+    const hud1 = `WASD MOVE | MOUSE LOOK | CORES ${foundCount}/${objects.length} | ${state.won ? "ESCAPED" : "FIND THE EXIT"}`;
+    const hud2 = `POS ${state.x.toFixed(1)},${state.y.toFixed(1)}  YAW ${((state.yaw * 180 / Math.PI + 360) % 360).toFixed(0)}  FPS ${fps.toFixed(0)}`;
+    for (let i = 0; i < hud1.length && i < COLS - 2; i++) {
+      drawChar(grid, i + 1, 0, hud1[i]);
+      colorGrid[0][i + 1] = state.won ? "#9aa7ff" : "#67d7b2";
+    }
+    for (let i = 0; i < hud2.length && i < COLS - 2; i++) {
+      drawChar(grid, i + 1, 1, hud2[i]);
+      colorGrid[1][i + 1] = "#72a7ff";
+    }
+
+    if (state.notice && performance.now() < state.noticeUntil) {
+      const noticeY = ROWS - 2;
+      textCentered(grid, noticeY, state.notice);
+      const noticeColor = state.notice.includes("FOUND")
+        ? "#ff667e"
+        : state.notice.includes("LOCKED")
+          ? "#cf7891"
+          : "#67d7b2";
+      const x0 = Math.floor((COLS - state.notice.length) / 2);
+      for (let i = 0; i < state.notice.length; i++) {
+        const xx = x0 + i;
+        if (xx >= 0 && xx < COLS) colorGrid[noticeY][xx] = noticeColor;
+      }
+    }
+
+    if (state.won) {
+      const wy = Math.floor(ROWS * 0.38);
+      const wonLines = [
+        [wy, "YOU FOUND THE EXIT"],
+        [wy + 1, "THE ASCII MAZE RELEASES YOU"],
+        [wy + 3, "PRESS R TO RESTART"]
+      ];
+      for (const [yy, str] of wonLines) {
+        textCentered(grid, yy, str);
+        const x0 = Math.floor((COLS - str.length) / 2);
+        for (let i = 0; i < str.length; i++) {
+          if (yy >= 0 && yy < ROWS && x0 + i >= 0 && x0 + i < COLS) {
+            colorGrid[yy][x0 + i] = yy === wy + 3 ? "#67d7b2" : "#9aa7ff";
+          }
+        }
+      }
+    }
+
+    screen.innerHTML = grid.map((row, y) => row.map((ch, x) => {
+      if (ch === " ") return " ";
+      const safe = ch.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return `<span style="color:${colorGrid[y][x]}">${safe}</span>`;
+    }).join("")).join("\n");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Game loop / controls
+  // ---------------------------------------------------------------------------
+  let fps = 0;
+  let fpsFrames = 0;
+  let fpsTimer = 0;
+
+  function update(dt) {
+    if (state.won) return;
+
+    const forward = (state.keys["w"] ? 1 : 0) - (state.keys["s"] ? 1 : 0);
+    const strafe  = (state.keys["d"] ? 1 : 0) - (state.keys["a"] ? 1 : 0);
+
+    let vx = 0, vy = 0;
+    if (forward || strafe) {
+      const len = Math.hypot(forward, strafe) || 1;
+      const f = forward / len;
+      const s = strafe / len;
+      vx = Math.cos(state.yaw) * f + Math.cos(state.yaw + Math.PI / 2) * s;
+      vy = Math.sin(state.yaw) * f + Math.sin(state.yaw + Math.PI / 2) * s;
+    }
+
+    const sprint = state.keys["shift"] ? 1.45 : 1.0;
+    const step = state.speed * sprint * dt;
+
+    // Sliding collision.
+    const nx = state.x + vx * step;
+    const ny = state.y + vy * step;
+
+    if (canWalk(nx, state.y)) state.x = nx;
+    if (canWalk(state.x, ny)) state.y = ny;
+
+    // Collectible interaction is proximity-based.
+    for (const o of objects) {
+      if (!o.found && Math.hypot(o.x - state.x, o.y - state.y) < 0.68) {
+        o.found = true;
+        state.notice = `FOUND: ${o.label}`;
+        state.noticeUntil = performance.now() + 1800;
+      }
+    }
+
+    // Exit.
+    const nearExit = Math.hypot(exitX - state.x, exitY - state.y) < 0.78;
+    if (nearExit) {
+      if (objects.every(o => o.found)) {
+        state.won = true;
+        state.notice = "EXIT OPEN";
+        state.noticeUntil = Infinity;
+        overlay.style.display = "none";
+        mobileControls.style.visibility = "hidden";
+        releaseAllVirtualKeys();
+        resetLookStick();
+        try { document.exitPointerLock(); } catch (_) {}
+      } else {
+        state.notice = "THE EXIT IS LOCKED";
+        state.noticeUntil = performance.now() + 900;
+      }
+    }
+
+    fpsFrames++;
+    fpsTimer += dt;
+    if (fpsTimer > 0.4) {
+      fps = fpsFrames / fpsTimer;
+      fpsFrames = 0;
+      fpsTimer = 0;
+    }
+  }
+
+  function loop(now) {
+    const dt = Math.min(0.05, (now - state.lastTime) / 1000);
+    state.lastTime = now;
+    state.t += dt;
+    update(dt);
+    markExploredArea();
+    render();
+    renderMinimap();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    state.keys[k] = true;
+
+    if (["w","a","s","d","shift"," "].includes(k)) e.preventDefault();
+
+    if (k === "r" && state.won) {
+      state.x = startX;
+      state.y = startY;
+      state.yaw = 0;
+      state.pitch = 0;
+      state.won = false;
+      for (const o of objects) o.found = false;
+      for (let y = 0; y < H; y++) explored[y].fill(false);
+      state.notice = "";
+      markExploredArea();
+      mobileControls.style.visibility = "visible";
+      overlay.style.display = "flex";
+      try { overlayBox.focus(); } catch (_) {}
+    }
+  });
+
+  window.addEventListener("keyup", (e) => {
+    state.keys[e.key.toLowerCase()] = false;
+  });
+
+  window.addEventListener("blur", () => {
+    for (const k of Object.keys(state.keys)) state.keys[k] = false;
+    releaseAllVirtualKeys();
+    resetLookStick();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (document.pointerLockElement !== document.body) return;
+    state.yaw += e.movementX * 0.0025;
+    state.pitch -= e.movementY * 0.0018;
+    state.pitch = clamp(state.pitch, -1.15, 1.15);
+  });
+
+  async function enterGame() {
+    // Pointer Lock is useful on desktop; mobile uses the virtual controls.
+    if (!touchMode) {
+      try {
+        await document.body.requestPointerLock();
+      } catch (_) {}
+    }
+    overlay.style.display = "none";
+  }
+
+  overlayBox.addEventListener("click", enterGame);
+  document.addEventListener("pointerlockchange", () => {
+    if (!touchMode && document.pointerLockElement !== document.body && !state.won) {
+      overlay.style.display = "flex";
+    }
+  });
+
+  // Keep focusable clicks from scrolling.
+  overlayBox.addEventListener("mousedown", (e) => e.preventDefault());
+
+  // Start.
+  resizeMinimap();
+  markExploredArea();
+  render();
+  renderMinimap();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
